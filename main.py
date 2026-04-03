@@ -1,12 +1,16 @@
 from fastapi import FastAPI
 from routes.client import router as client_router
-from models.model_base import creade_db
+from models.model_base import creade_db, engine
+from admins.admin import setup_admin
 
 
 import uvicorn
 
 
 app = FastAPI()
+
+
+setup_admin(app, engine)
 
 
 app.include_router(client_router)

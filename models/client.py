@@ -38,4 +38,5 @@ class UserModel(UserBase, table=True):
 class UserRead(UserBase):
     name: str = Field(min_length=3, max_length=30)
     surname: str = Field(min_length=3, max_length=30)
+    phone: str
     residence: str | None = Field(default="Не указано", min_length=3, max_length=40)
