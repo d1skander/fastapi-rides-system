@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel, Field
-from pydantic import field_validator, model_validator
+from pydantic import field_validator, model_validator, ConfigDict
 from typing_extensions import Self
 from fastapi import HTTPException
 
@@ -11,6 +11,7 @@ class UserBase(SQLModel):
 
 
 class UserModel(UserBase, table=True):
+    model_config = ConfigDict(validate_assignment=True, from_attributes=True)
     id: int | None = Field(default=None, primary_key=True)
     phone: str
     password: str = Field(min_length=8, max_length=20)
@@ -23,16 +24,25 @@ class UserModel(UserBase, table=True):
         return self
 
 
-    @field_validator("phone")
+    @field_validator("phone", mode="before")
     @classmethod
     def number_verification(cls, value: str) -> str:
-        if value.startswith("+") or value.startswith("7") or value.startswith("8"):
-            value = value.replace(" ", "")
-            if value.startswith("+"):
-                value = value.replace("+", "", 1)
-            if value.startswith("+"):
-                value = "8" + value[1:]
-        return value
+        print(f"Валидатор видит: {value}") 
+        value = value.lstrip("+")
+        value = value.strip()
+        value = value.replace(" ", "")
+        if value.isdigit() == False or len(value) != 11:
+            raise HTTPException(status_code=400, detail="Неправильный ввод")
+        if value[0] == "8":
+            value = "7" + value[1:]        
+            print(value)
+            return value
+        elif value[0] == "7":
+            print(value)
+            return value
+        
+        else:
+            raise HTTPException(status_code=400, detail="Неправильный ввод")
     
 
 class UserRead(UserBase):
