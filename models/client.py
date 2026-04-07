@@ -34,7 +34,7 @@ class UserModel(UserBase, table=True):
         if value.isdigit() == False or len(value) != 11:
             raise HTTPException(status_code=400, detail="Неправильный ввод")
         if value[0] == "8":
-            value = "7" + value[1:]        
+            value = "7" + value[1:]
             print(value)
             return value
         elif value[0] == "7":
