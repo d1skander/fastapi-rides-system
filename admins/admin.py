@@ -31,7 +31,7 @@ def setup_admin(app, engine):
 
     class RiderAdmin(ModelView, model=user):
         column_list = [user.name, user.surname, user.residence,
-                        user.phone, user.id,user.password]
+                        user.phone, user.id,user.password, user.username]
 
     auth_back = AuthAdmin(secret_key=os.getenv("ADMIN_SECRET_KEY"))
     admin = Admin(app, engine, authentication_backend=auth_back)
