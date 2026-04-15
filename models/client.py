@@ -1,13 +1,34 @@
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Column
 from pydantic import field_validator, model_validator, ConfigDict
-from typing_extensions import Self, Any
+from dotenv import load_dotenv
+from typing import Any
+from geopy.geocoders import Photon
+from geoalchemy2 import Geometry
+
+
 import bcrypt
+import os
+
+
+load_dotenv()
 
 
 class UserBase(SQLModel):
     name: str = Field(min_length=3, max_length=30)
     surname: str = Field(min_length=3, max_length=30)
-    residence: str | None = Field(default="Не указано", min_length=3, max_length=40)
+    residence: Any = Field(min_length=3, max_length=150, sa_column=Column(Geometry(geometry_type="POINT", srid=4326)))
+
+
+    @field_validator("residence", mode="after")
+    @classmethod
+    def check_coordinates(cls, value: Any) -> Any:
+        geolocator = Photon(user_agent=os.getenv("USER_AGENT_GEO"), timeout=30)
+        address = value
+        location = geolocator.geocode(address, timeout=30)
+        if value is None:
+            raise AttributeError("Не удалось обнаружить координаты")
+        value = f"POINT({location.longitude} {location.latitude})"
+        return value
 
 
 class UserModel(UserBase, table=True):
@@ -56,4 +77,4 @@ class UserRead(UserBase):
     name: str
     surname: str
     phone: str
-    residence: str
+    residence: Any

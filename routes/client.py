@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, status
-from typing import Annotated, Any
-from models.client import UserModel, UserRead
+from typing import Annotated
+from models.client import UserModel
 from models.model_base import SessionDep
 from sqlmodel import select
 from fastapi.security import OAuth2PasswordRequestForm

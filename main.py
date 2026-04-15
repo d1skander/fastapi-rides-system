@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from routes.client import router as client_router
+from routes.driver import router as driver_router
 from models.model_base import creade_db, engine
 from admins.admin import setup_admin
 
@@ -14,6 +15,7 @@ setup_admin(app, engine)
 
 
 app.include_router(client_router)
+app.include_router(driver_router)
 
 
 if __name__== "__main__":
