@@ -1,8 +1,10 @@
 from sqladmin import ModelView, Admin
 from models.client import UserModel as user
+from models.driver import PathDeclaration as path
 from sqladmin.authentication import AuthenticationBackend
 from starlette.requests import Request
 from dotenv import load_dotenv
+from wtforms import StringField
 
 
 import os
@@ -32,7 +34,17 @@ def setup_admin(app, engine):
     class RiderAdmin(ModelView, model=user):
         column_list = [user.name, user.surname, user.residence,
                         user.phone, user.id,user.password, user.username]
+        
+        form_overrides = {"residence": StringField}
+
+
+    class PathAdmin(ModelView, model=path):
+        column_list =[path.car, path.path_start, path.path_end]
+
+
+        form_overrides = {"residence": StringField}
 
     auth_back = AuthAdmin(secret_key=os.getenv("ADMIN_SECRET_KEY"))
     admin = Admin(app, engine, authentication_backend=auth_back)
     admin.add_view(RiderAdmin)
+    admin.add_view(PathAdmin)

@@ -5,6 +5,7 @@ from typing import Annotated
 from models.client import UserModel
 from models.driver import PathDeclaration
 from geopy.geocoders import Photon
+from geoalchemy2.shape import to_shape, from_shape
 from dotenv import load_dotenv
 
 
@@ -27,8 +28,8 @@ def announce_a_trip(current: Annotated[str, Depends(get_current_active_user)],
     user = session.exec(statement).first()
     path_model.name_driver = user.name + " " + user.surname[0] + "."
     path_model.number_phone = user.phone
-    if path_model.path_start == None or path_model.path_start is None:
-        path_model.path_start = str(geolocator.reverse(query=(user.residence)))
+    if path_model.path_start == "string":
+        path_model.path_start = from_shape(to_shape(user.residence), srid=4326)
         session.add(path_model)
         session.commit()
         return {"message": "Обьявление вылажено", "начало": path_model.path_start}
@@ -38,7 +39,7 @@ def announce_a_trip(current: Annotated[str, Depends(get_current_active_user)],
     return {"message": "Обьявление вылажено"}
 
 
-@router.get("/get")
+@router.get("/get", response_model=PathDeclaration)
 def get_announce(session: SessionDep):
     statement = select(PathDeclaration)
     results = session.exec(statement).all()
