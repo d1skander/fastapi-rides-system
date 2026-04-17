@@ -12,8 +12,19 @@ import os
 load_dotenv()
 
 
+from typing import Any
+import os
+from sqlmodel import SQLModel, Field, Column, JSON
+from geoalchemy2 import Geometry
+from geoalchemy2.shape import to_shape
+from pydantic import ConfigDict, field_validator
+from geopy.geocoders import Photon
+from geoalchemy2.elements import WKBElement
+
+
 class PathDeclaration(SQLModel, table=True):
     model_config = ConfigDict(validate_assignment=True, from_attributes=True)
+    
     id: int | None = Field(primary_key=True, default=None)
     name_driver: str
     number_phone: str
@@ -25,13 +36,19 @@ class PathDeclaration(SQLModel, table=True):
     price: int
 
 
-    @field_validator("path_end", mode="before")
+    @field_validator("path_start", "path_end", mode="before")
     @classmethod
-    def check_path_end(cls, value):
-        geolocator = Photon(user_agent=os.getenv("USER_AGENT_GEO"), timeout=30)
-        address = value
-        location = geolocator.geocode(address, timeout=30)
-        if value is None:
-            raise AttributeError("Не удалось обнаружить координаты")
-        value = f"POINT({location.longitude} {location.latitude})"
+    def process_geometry(cls, value):
+        if isinstance(value, WKBElement):
+            return str(to_shape(value))
+
+
+        if isinstance(value, str) and not value.startswith("POINT"):
+            geolocator = Photon(user_agent=os.getenv("USER_AGENT_GEO"), timeout=30)
+            location = geolocator.geocode(value, timeout=30)
+            if location is None:
+                raise ValueError(f"Не удалось найти координаты для адреса: {value}")
+            return f"POINT({location.longitude} {location.latitude})"
+        
+        
         return value

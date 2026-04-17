@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlmodel import select
-from models.token import oauth2_sheme, SessionDep, get_current_active_user
+from models.token import SessionDep, get_current_active_user
 from typing import Annotated
 from models.client import UserModel
 from models.driver import PathDeclaration
@@ -39,8 +39,28 @@ def announce_a_trip(current: Annotated[str, Depends(get_current_active_user)],
     return {"message": "Обьявление вылажено"}
 
 
-@router.get("/get", response_model=PathDeclaration)
+@router.get("/get", response_model=None)
 def get_announce(session: SessionDep):
     statement = select(PathDeclaration)
     results = session.exec(statement).all()
-    return results
+    final_data = []
+    for i in results:
+        p_start = to_shape(i.path_start)
+        p_end = to_shape(i.path_end)
+        start_location = geolocator.reverse((p_start.y, p_start.x), timeout=30)
+        end_location = geolocator.reverse((p_end.y, p_end.x), timeout=30)
+        address_start = str(start_location.address)
+        address_end = i.path_end = str(end_location.address)
+        item = {
+            "id": i.id,
+            "name_driver": i.name_driver,
+            "number_phone": i.number_phone,
+            "car": i.car,
+            "price": i.price,
+            "number_of_passengers": i.number_of_passengers,
+            "space_in_the_car": i.space_in_the_car,
+            "path_start": address_start,
+            "path_end": address_end
+        }
+        final_data.append(item)
+    return final_data
