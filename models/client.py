@@ -24,7 +24,9 @@ class UserBase(SQLModel):
     def check_coordinates(cls, value: Any) -> Any:
         geolocator = Photon(user_agent=os.getenv("USER_AGENT_GEO"), timeout=30)
         address = value
-        location = geolocator.geocode(address, timeout=30)
+        location = geolocator.geocode(address, timeout=30, osm_tag=["place:city", "place:town", "place:village", 
+                                                                    "place:hamlet", "place:isolated_dwelling",
+                                                                    "place:settlement"])
         if value is None:
             raise AttributeError("Не удалось обнаружить координаты")
         value = f"POINT({location.longitude} {location.latitude})"
